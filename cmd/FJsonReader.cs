@@ -51,6 +51,52 @@ public class Reader
         return _context.Json.Span.Slice(f.Begin, f.Length);
     }
 
+    public bool ParseBool(Field field)
+    {
+        var json = _context.Json.Span;
+        if (bool.TryParse(json.Slice(field.Begin, field.Length), out var result))
+        {
+            return result;
+        }
+        return false;
+    }
+
+    public float ParseFloat(Field field)
+    {
+        var json = _context.Json.Span;
+        if (float.TryParse(json.Slice(field.Begin, field.Length), out var result))
+        {
+            return result;
+        }
+        return 0.0f;
+    }
+
+    public int ParseInt(Field field)
+    {
+        var json = _context.Json.Span;
+        if (int.TryParse(json.Slice(field.Begin, field.Length), out var result))
+        {
+            return result;
+        }
+        return 0;
+    }
+
+    public long ParseLong(Field field)
+    {
+        var json = _context.Json.Span;
+        if (long.TryParse(json.Slice(field.Begin, field.Length), out var result))
+        {
+            return result;
+        }
+        return 0;
+    }
+
+    public string ParseString(Field field)
+    {
+        var json = _context.Json.Span;
+        return json.Slice(field.Begin, field.Length).ToString();
+    }
+
     public bool IsFieldName(Field f, string name)
     {
         return name.AsSpan().CompareTo(_context.Json.Span.Slice(f.Begin, f.Length), StringComparison.OrdinalIgnoreCase) == 0;

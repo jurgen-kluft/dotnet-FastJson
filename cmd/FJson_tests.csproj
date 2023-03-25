@@ -9,7 +9,9 @@
   <ItemGroup>
     <Compile Remove="*.cs" />
     <Compile Include="FJsonReader.cs" />
+    <Compile Include="FJsonReader_Test2.cs" />
     <Compile Include="FJsonReader_Test.cs" />
+    <Compile Include="FJsonWriter.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="FJsonParser.cs" />
     <Compile Include="FJsonReader.cs" />
+    <Compile Include="FJsonWriter.cs" />
     <Compile Include="Usings.cs" />
   </ItemGroup>
 
