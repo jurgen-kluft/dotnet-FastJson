@@ -385,7 +385,7 @@ public class Reader
                     outValue = Field.Error;
                     return -1;
                 }
-                context.Stack[--context.StackIndex] = ValueType.Array;
+                context.Stack[--context.StackIndex] = ValueType.Object;
                 outValue = new Field(context.Index, context.Index+1, ValueType.Object);
                 ++context.Index; // skip '{'
                 return 2;

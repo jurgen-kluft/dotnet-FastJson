@@ -126,7 +126,7 @@ public class JsonReaderTests2
 
                 if (json.IsFieldName(key, "Stages"))
                 {
-                    while (json.Read(out key, out value))
+                    while (json.Read(out  key, out  value))
                     {
                         if (json.IsArrayEnd(key, value))
                             break;
@@ -152,12 +152,12 @@ public class JsonReaderTests2
                 }
                 else if (json.IsFieldName(key, "Processes"))
                 {
-                    while (json.Read(out key, out value))
+                    while (json.Read(out  key, out  value))
                     {
-                        if (json.IsObjectEnd(key, value))
+                        if (json.IsArrayEnd(key, value))
                             break;
                         var ps = ReadProcessState(json);
-                        ss.Processes.Add(json.ParseString(key), ps);
+                        ss.Processes.Add(ps.Name, ps);
                     }
                 }
             }
@@ -196,7 +196,7 @@ public class JsonReaderTests2
                 }
                 else if (json.IsFieldName(key, "Files"))
                 {
-                    while (json.Read(out key, out value))
+                    while (json.Read(out  key, out  value))
                     {
                         if (json.IsArrayEnd(key, value))
                             break;
