@@ -1,0 +1,35 @@
+#ignore all files
+*
+!*/
+
+.idea/
+target/
+temp/
+tags
+
+#except the following files
+!.gitignore
+!.clang-format
+!*.cpp
+!*.hpp
+!*.c
+!*.h
+!*.inl
+
+!*.go
+
+!*.cs
+!*.sln
+!*.csproj
+!*.resx
+!*.props
+
+!*.md
+!*.jpg
+!*.txt
+!*.html
+
+!*.ini
+!*.bat
+
+#except the following folders
