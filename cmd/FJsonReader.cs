@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace FJson;
 
 public class Reader
@@ -36,24 +38,18 @@ public class Reader
 
     public bool Begin(string json)
     {
-        _context = new Context(json.ToCharArray().AsMemory());
-        return ParseBegin(ref _context);
-    }
-
-    public bool Begin(Memory<char> json)
-    {
         _context = new Context(json);
         return ParseBegin(ref _context);
     }
 
     public ReadOnlySpan<char> FieldStr(Field f)
     {
-        return _context.Json.Span.Slice(f.Begin, f.Length);
+        return _context.Json.Slice(f.Begin, f.Length);
     }
 
     public bool ParseBool(Field field)
     {
-        var json = _context.Json.Span;
+        var json = _context.Json;
         if (bool.TryParse(json.Slice(field.Begin, field.Length), out var result))
         {
             return result;
@@ -63,7 +59,7 @@ public class Reader
 
     public float ParseFloat(Field field)
     {
-        var json = _context.Json.Span;
+        var json = _context.Json;
         if (float.TryParse(json.Slice(field.Begin, field.Length), out var result))
         {
             return result;
@@ -73,7 +69,7 @@ public class Reader
 
     public int ParseInt(Field field)
     {
-        var json = _context.Json.Span;
+        var json = _context.Json;
         if (int.TryParse(json.Slice(field.Begin, field.Length), out var result))
         {
             return result;
@@ -83,7 +79,7 @@ public class Reader
 
     public long ParseLong(Field field)
     {
-        var json = _context.Json.Span;
+        var json = _context.Json;
         if (long.TryParse(json.Slice(field.Begin, field.Length), out var result))
         {
             return result;
@@ -97,16 +93,16 @@ public class Reader
         {
             return GetEscapedString(ref _context, field);
         }
-        else 
+        else
         {
-            var json = _context.Json.Span;
+            var json = _context.Json;
             return json.Slice(field.Begin, field.Length).ToString();
         }
     }
 
     public bool IsFieldName(Field f, string name)
     {
-        return name.AsSpan().CompareTo(_context.Json.Span.Slice(f.Begin, f.Length), StringComparison.OrdinalIgnoreCase) == 0;
+        return name.AsSpan().CompareTo(_context.Json.Slice(f.Begin, f.Length), StringComparison.OrdinalIgnoreCase) == 0;
     }
 
     public bool IsObjectEnd(Field key, Field value)
@@ -213,7 +209,7 @@ public class Reader
     {
         SkipWhiteSpace(ref context);
 
-        var json = context.Json.Span;
+        var json = context.Json;
         switch (json[context.Index])
         {
             case '{':
@@ -237,7 +233,7 @@ public class Reader
 
     private static bool ParseBegin(ref Context context)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
 
         SkipWhiteSpace(ref context);
 
@@ -279,7 +275,7 @@ public class Reader
 
     private static int ParseObjectBody(ref Context context, out Field outKey, out Field outValue)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
 
         SkipWhiteSpace(ref context);
         if (json[context.Index] == ',')
@@ -365,7 +361,7 @@ public class Reader
     /// </summary>
     private static int ParseArrayBody(ref Context context, out Field outValue)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
 
         SkipWhiteSpace(ref context);
         if (json[context.Index] == ',')
@@ -430,7 +426,7 @@ public class Reader
     private static Field ParseNumber(ref Context context)
     {
         var span = new Field(context.Index, context.Index, ValueType.Number);
-        var json = context.Json.Span;
+        var json = context.Json;
         while (true)
         {
             switch (json[++context.Index])
@@ -455,7 +451,7 @@ public class Reader
     {
         var span = new Field() { Begin = context.Index, Length = 0, Type = ValueType.Bool };
 
-        var json = context.Json.Span;
+        var json = context.Json;
         var asTrue = "true".AsSpan();
         if (asTrue.CompareTo(json.Slice(context.Index, 4), StringComparison.OrdinalIgnoreCase) == 0)
         {
@@ -480,7 +476,7 @@ public class Reader
     {
         var span = new Field() { Begin = context.Index, Length = 0, Type = ValueType.Null };
 
-        var json = context.Json.Span;
+        var json = context.Json;
         var asNull = "null".AsSpan();
         if (asNull.CompareTo(json.Slice(context.Index, 4), StringComparison.OrdinalIgnoreCase) == 0)
         {
@@ -495,7 +491,7 @@ public class Reader
 
     private static void SkipWhiteSpace(ref Context context)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
         while (true)
         {
             switch (json[context.Index])
@@ -515,7 +511,7 @@ public class Reader
 
     private static bool SkipWhiteSpaceUntil(ref Context context, char until)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
         while (true)
         {
             switch (json[context.Index])
@@ -537,7 +533,7 @@ public class Reader
         // skip '"'
         var start = ++context.Index;
 
-        var json = context.Json.Span;
+        var json = context.Json;
         while (true)
         {
             switch (json[context.Index++])
@@ -567,8 +563,8 @@ public class Reader
     {
         // skip '"'
         var str = new StringBuilder();
-        
-        var json = context.Json.Span.Slice(f.Begin, f.Length);
+
+        var json = context.Json.Slice(f.Begin, f.Length);
 
         var index = 0;
         while (index < f.Length)
@@ -650,7 +646,7 @@ public class Reader
 
     private static char GetUnicodeCodePoint(Context context, ref int index)
     {
-        var json = context.Json.Span;
+        var json = context.Json;
         uint unicode = 0;
         for (var i = 0; i < 4; ++i)
         {
@@ -670,16 +666,17 @@ public class Reader
 
     private struct Context
     {
-        public Memory<char> Json { get; }
+        private readonly string JsonStr;
+        public ReadOnlySpan<char> Json => JsonStr;
         public int Index { get; set; }
         public bool IsEscapeString { get; }
         public ValueType[] Stack { get; }
         public int StackIndex { get; set; }
-        public StringBuilder EscapedStrings {get;set;}
+        private StringBuilder EscapedStrings {get;set;}
 
-        public Context(Memory<char> json)
+        public Context(string json)
         {
-            Json = json;
+            JsonStr = json;
             Index = 0;
             IsEscapeString = false;
             Stack = new ValueType[64];
