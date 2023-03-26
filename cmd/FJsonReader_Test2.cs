@@ -37,80 +37,75 @@ public class JsonReaderTests2
         public static string WritePipelineState(FJson.Writer writer, PipelineState state)
         {
             writer.Begin();
-            writer.BeginArray("Stages");
             {
-                for (var i = 0; i < state.Stages.Keys.Count; ++i)
+                writer.BeginArray("Stages");
                 {
-                    writer.BeginObject(string.Empty);
+                    foreach (var (_, value) in state.Stages)
                     {
-                        var key = state.Stages.Keys.ElementAt(i);
-                        var value = state.Stages[key];
                         WriteStageState(writer, value);
                     }
-                    writer.EndObject(i == (state.Stages.Keys.Count - 1));
                 }
+                writer.EndArray();
             }
-            writer.EndArray(true);
             return writer.End();
         }
 
-        public static void WriteStageState(FJson.Writer writer, StageState state)
+        private static void WriteStageState(FJson.Writer writer, StageState state)
         {
-            writer.WriteField("Name", state.Name);
-            writer.BeginArray("Processes");
+            writer.BeginObject();
             {
-                for (var i = 0; i < state.Processes.Keys.Count; ++i)
+                writer.WriteField("Name", state.Name);
+                writer.BeginArray("Processes");
                 {
-                    writer.BeginObject(string.Empty);
+                    foreach (var (_, value) in state.Processes)
                     {
-                        var key = state.Processes.Keys.ElementAt(i);
-                        var value = state.Processes[key];
                         WriteProcessState(writer, value);
                     }
-                    writer.EndObject(i == (state.Processes.Keys.Count - 1));
                 }
+                writer.EndArray();
             }
-            writer.EndArray(true);
+            writer.EndObject();
         }
 
-        public static void WriteProcessState(FJson.Writer writer, ProcessState state)
+        private static void WriteProcessState(FJson.Writer writer, ProcessState state)
         {
-            writer.WriteField("Name", state.Name);
-            writer.WriteField("CmdLine", state.Commandline);
-            writer.WriteField("DepHash", state.ProcessDescriptorHash);
-
-            writer.BeginArray("Files");
+            writer.BeginObject();
             {
-                for (var i = 0; i < state.Files.Keys.Count; ++i)
+                writer.WriteField("Name", state.Name);
+                writer.WriteField("CmdLine", state.Commandline);
+                writer.WriteField("DepHash", state.ProcessDescriptorHash);
+
+                writer.BeginArray("Files");
                 {
-                    var key = state.Files.Keys.ElementAt(i);
-                    writer.BeginObject(string.Empty);
+                    foreach (var (_, value) in state.Files)
                     {
-                        var value = state.Files[key];
                         WriteFileState(writer, value);
                     }
-                    writer.EndObject(i == (state.Files.Keys.Count - 1));
                 }
-            }
-            writer.EndArray();
+                writer.EndArray();
 
-            writer.BeginArray("UsedVars");
-            {
-                for (var i = 0; i < state.UsedVars.Count; ++i)
+                writer.BeginArray("UsedVars");
                 {
-                    var element = state.UsedVars[i];
-                    writer.WriteElement(element, i == (state.UsedVars.Count - 1));
+                    foreach (var e in state.UsedVars)
+                    {
+                        writer.WriteElement(e);
+                    }
                 }
+                writer.EndArray();
             }
-            writer.EndArray(true);
+            writer.EndObject();
         }
 
-        public static void WriteFileState(FJson.Writer writer, FileState state)
+        private static void WriteFileState(FJson.Writer writer, FileState state)
         {
-            writer.WriteField("IsOutput", state.IsOutput);
-            writer.WriteField("FilePath", state.FilePath);
-            writer.WriteField("LastWriteTime", state.LastWriteTime);
-            writer.WriteField("ContentHash", state.ContentHashStr, true);
+            writer.BeginObject();
+            {
+                writer.WriteField("IsOutput", state.IsOutput);
+                writer.WriteField("FilePath", state.FilePath);
+                writer.WriteField("LastWriteTime", state.LastWriteTime);
+                writer.WriteField("ContentHash", state.ContentHashStr);
+            }
+            writer.EndObject();
         }
     }
 
