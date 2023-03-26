@@ -272,7 +272,7 @@ public class JsonReaderTests2
         myPipelineState.Stages.Add(stageB.Name, stageB);
 
         var jsonWriter = new FJson.Writer();
-        string jsonString = PipelineStateJsonWriter.WritePipelineState(jsonWriter, myPipelineState);
+        var jsonString = PipelineStateJsonWriter.WritePipelineState(jsonWriter, myPipelineState);
 
         var jsonReader = new FJson.Reader();
         if (jsonReader.Begin(jsonString))
