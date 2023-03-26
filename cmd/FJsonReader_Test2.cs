@@ -114,17 +114,12 @@ public class JsonReaderTests2
         public static PipelineState ReadPipelineState(FJson.Reader json)
         {
             var ps = new PipelineState();
-            while (json.Read(out var key, out var value))
+            while (json.ReadUntilObjectEnd(out var key, out var value))
             {
-                if (json.IsObjectEnd(key, value))
-                    break;
-
                 if (json.IsFieldName(key, "Stages"))
                 {
-                    while (json.Read(out  key, out  value))
+                    while (json.ReadUntilArrayEnd(out  key, out  value))
                     {
-                        if (json.IsArrayEnd(key, value))
-                            break;
                         var ss = ReadStageState(json);
                         ps.Stages.Add(ss.Name, ss);
                     }
@@ -136,21 +131,16 @@ public class JsonReaderTests2
         private static StageState ReadStageState(FJson.Reader json)
         {
             var ss = new StageState();
-            while (json.Read(out var key, out var value))
+            while (json.ReadUntilObjectEnd(out var key, out var value))
             {
-                if (json.IsObjectEnd(key, value))
-                    break;
-
                 if (json.IsFieldName(key, "Name"))
                 {
                     ss.Name = json.ParseString(value);
                 }
                 else if (json.IsFieldName(key, "Processes"))
                 {
-                    while (json.Read(out  key, out  value))
+                    while (json.ReadUntilArrayEnd(out  key, out  value))
                     {
-                        if (json.IsArrayEnd(key, value))
-                            break;
                         var ps = ReadProcessState(json);
                         ss.Processes.Add(ps.Name, ps);
                     }
@@ -163,10 +153,8 @@ public class JsonReaderTests2
         private static ProcessState ReadProcessState(FJson.Reader json)
         {
             var ps = new ProcessState();
-            while (json.Read(out var key, out var value))
+            while (json.ReadUntilObjectEnd(out var key, out var value))
             {
-                if (json.IsObjectEnd(key, value))
-                    break;
 
                 if (json.IsFieldName(key, "Name"))
                 {
@@ -182,19 +170,15 @@ public class JsonReaderTests2
                 }
                 else if (json.IsFieldName(key, "UsedVars"))
                 {
-                    while (json.Read(out key, out value))
+                    while (json.ReadUntilArrayEnd(out key, out value))
                     {
-                        if (json.IsArrayEnd(key, value))
-                            break;
                         ps.UsedVars.Add(json.ParseString(value));
                     }
                 }
                 else if (json.IsFieldName(key, "Files"))
                 {
-                    while (json.Read(out  key, out  value))
+                    while (json.ReadUntilArrayEnd(out  key, out  value))
                     {
-                        if (json.IsArrayEnd(key, value))
-                            break;
                         var fs = ReadFileState(json);
                         ps.Files.Add(fs.FilePath, fs);
                     }
@@ -207,11 +191,8 @@ public class JsonReaderTests2
         private static FileState ReadFileState(FJson.Reader json)
         {
             var fs = new FileState();
-            while (json.Read(out var key, out var value))
+            while (json.ReadUntilObjectEnd(out var key, out var value))
             {
-                if (json.IsObjectEnd(key, value))
-                    break;
-
                 if (json.IsFieldName(key, "IsOutput"))
                 {
                     fs.IsOutput = json.ParseBool(value);

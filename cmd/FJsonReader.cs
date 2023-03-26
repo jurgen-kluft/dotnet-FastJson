@@ -93,8 +93,15 @@ public class Reader
 
     public string ParseString(Field field)
     {
-        var json = _context.Json.Span;
-        return json.Slice(field.Begin, field.Length).ToString();
+        if (_context.IsEscapeString)
+        {
+            return GetEscapedString(ref _context, field);
+        }
+        else 
+        {
+            var json = _context.Json.Span;
+            return json.Slice(field.Begin, field.Length).ToString();
+        }
     }
 
     public bool IsFieldName(Field f, string name)
@@ -107,9 +114,29 @@ public class Reader
         return key.Type == ValueType.Object && value.Type == ValueType.End;
     }
 
+    public bool ReadUntilObjectEnd(out Field key, out Field value)
+    {
+        if (Read(out key, out value))
+        {
+            return IsObjectEnd(key, value);
+        }
+
+        return false;
+    }
+
     public bool IsArrayEnd(Field key, Field value)
     {
         return key.Type == ValueType.Array && value.Type == ValueType.End;
+    }
+
+    public bool ReadUntilArrayEnd(out Field key, out Field value)
+    {
+        if (Read(out key, out value))
+        {
+            return IsArrayEnd(key, value);
+        }
+
+        return false;
     }
 
     public bool Read(out Field key, out Field value)
@@ -397,10 +424,6 @@ public class Reader
 
     private static Field ParseString(ref Context context)
     {
-        if (context.IsEscapeString)
-        {
-            return GetEscapedString(ref context);
-        }
         return GetString(ref context);
     }
 
@@ -540,28 +563,29 @@ public class Reader
         return new Field(start, (context.Index - 1) - start, ValueType.String);
     }
 
-    private static Field GetEscapedString(ref Context context)
+    private static string GetEscapedString(ref Context context, Field f)
     {
         // skip '"'
-        var start = ++context.Index;
+        var str = new StringBuilder();
+        
+        var json = context.Json.Span.Slice(f.Begin, f.Length);
 
-        var json = context.Json.Span;
-        var write = context.Index;
-        while (true)
+        var index = 0;
+        while (index < f.Length)
         {
-            switch (json[context.Index])
+            switch (json[index])
             {
                 // check string end '"'
                 case '"':
-                    context.Index++;
+                    index++;
                     break;
 
                 // check escaped char
                 case '\\':
                     {
                         char c;
-                        context.Index++;
-                        switch (json[context.Index++])
+                        index++;
+                        switch (json[index++])
                         {
                             case '"':
                                 c = '"';
@@ -600,7 +624,7 @@ public class Reader
                                 break;
 
                             case 'u':
-                                c = GetUnicodeCodePoint(ref context);
+                                c = GetUnicodeCodePoint(context, ref index);
                                 break;
 
                             default:
@@ -608,31 +632,29 @@ public class Reader
                                 continue;
                         }
 
-                        json[write++] = c;
+                        str.Append(c);
                         continue;
                     }
 
                 default:
-                    if (write < context.Index)
-                    {
-                        json[write++] = json[context.Index++];
-                    }
+                    // json[write++] = json[context.Index++];
+                    str.Append(json[index++]);
                     continue;
             }
 
             break;
         }
 
-        return new Field(start, write, ValueType.String);
+        return str.ToString();
     }
 
-    private static char GetUnicodeCodePoint(ref Context context)
+    private static char GetUnicodeCodePoint(Context context, ref int index)
     {
         var json = context.Json.Span;
         uint unicode = 0;
         for (var i = 0; i < 4; ++i)
         {
-            var c = json[context.Index++];
+            var c = json[index++];
             var cp = c switch
             {
                 >= '0' and <= '9' => (byte)(c - '0'),
@@ -653,6 +675,7 @@ public class Reader
         public bool IsEscapeString { get; }
         public ValueType[] Stack { get; }
         public int StackIndex { get; set; }
+        public StringBuilder EscapedStrings {get;set;}
 
         public Context(Memory<char> json)
         {
@@ -661,6 +684,7 @@ public class Reader
             IsEscapeString = false;
             Stack = new ValueType[64];
             StackIndex = Stack.Length;
+            EscapedStrings = new StringBuilder();
         }
     }
 
