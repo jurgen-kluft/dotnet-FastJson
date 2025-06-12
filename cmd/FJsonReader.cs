@@ -399,7 +399,7 @@ public class Reader
                     return -1;
                 }
                 context.Stack[--context.StackIndex] = ValueType.Array;
-                outValue = new Field(context.Index, context.Index+1, ValueType.Array);
+                outValue = new Field(context.Index, 1, ValueType.Array);
                 ++context.Index; // skip '['
                 return 2;
             case ValueType.Object:
@@ -409,7 +409,7 @@ public class Reader
                     return -1;
                 }
                 context.Stack[--context.StackIndex] = ValueType.Object;
-                outValue = new Field(context.Index, context.Index+1, ValueType.Object);
+                outValue = new Field(context.Index, 1, ValueType.Object);
                 ++context.Index; // skip '{'
                 return 2;
         }
@@ -425,7 +425,7 @@ public class Reader
 
     private static Field ParseNumber(ref Context context)
     {
-        var span = new Field(context.Index, context.Index, ValueType.Number);
+        var span = new Field(context.Index, 0, ValueType.Number);
         var json = context.Json;
         while (true)
         {
